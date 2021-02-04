@@ -16,7 +16,7 @@ python -m venv icon2021
 
 - Attivare il virtual env
 ```
-/src/icon2021/activate
+/src/icon2021/bin/activate
 ```
 
 - Installare le dipendenze
