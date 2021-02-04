@@ -4,6 +4,9 @@ icon2021/
 # IntelliJ Idea project files
 .idea/
 
+# Visutal Studio Code project files
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
