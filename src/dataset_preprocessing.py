@@ -5,13 +5,17 @@ import pandas as pd
 import datetime as dt
 from math import isnan
 
+# Definizione dell'anno da utilizzare per i calcoli e le date nella look-up table
+# L'anno deve essere bisestile per prevenire eventuali errori di parsificazione della data
+LEAP_YEAR = int(2016)
+
 # Conversione delle date di arrivo in stagioni
 # Dizionario da utilizzare per il lookup delle stagioni
 seasons = {
-    "winter": dt.date(1944, 12, 21),
-    "spring": dt.date(1944, 3, 20),
-    "summer": dt.date(1944, 6, 21),
-    "autumn": dt.date(1944, 9, 22)
+    "winter": dt.date(LEAP_YEAR, 12, 21),
+    "spring": dt.date(LEAP_YEAR, 3, 20),
+    "summer": dt.date(LEAP_YEAR, 6, 21),
+    "autumn": dt.date(LEAP_YEAR, 9, 22)
 }
 
 
@@ -19,7 +23,7 @@ def convert_to_season(x):
     """Funzione per convertire la data di arrivo in una riga in una stagione."""
     d = dt.datetime.strptime(str(x["arrival_date_year"]) + " " + x["arrival_date_month"] + " "
                              + str(x["arrival_date_day_of_month"]), "%Y %B %d").date()
-    d = d.replace(year=1944)
+    d = d.replace(year=LEAP_YEAR)
 
     if d < seasons["spring"]:
         return "winter"
