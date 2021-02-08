@@ -4,6 +4,8 @@ Script per il pre-processing del dataset sulle prenotazioni di un hotel
 import pandas as pd
 import datetime as dt
 from math import isnan
+from sys import argv
+from os import path
 
 # Definizione dell'anno da utilizzare per i calcoli e le date nella look-up table
 # L'anno deve essere bisestile per prevenire eventuali errori di parsificazione della data
@@ -75,9 +77,13 @@ def refactor_adr(x, table):
     return table.get(key)
 
 
-def main():
+def main(file_path):
     # Caricamento del dataset in memoria
-    data_frame = pd.read_csv(r"..\datasets\city_hotels.csv")
+    if not path.isfile(file_path):
+        print("Error: could not find specified CSV dataset")
+        return
+
+    data_frame = pd.read_csv(argv[1])
 
     # Prima eliminazione delle colonne non utilizzate
     data_frame = data_frame.drop(
@@ -89,12 +95,11 @@ def main():
     data_frame["Minors"] = data_frame.apply(lambda x: 0 if isnan(x["Minors"]) else int(x["Minors"]), axis=1)
     data_frame = data_frame.drop(["Children", "Babies"], axis=1)
     
-    #normlizzazione del rateo di cancellazione
-
-    data_frame["cancel_rate"] = data_frame.apply(lambda x : 0 if
-    x["previous_cancellations"] + x["previous_bookings_not_canceled"]==0 else
-    x["previous_cancellations"]/(x["previous_cancellations"] + x["previous_bookings_not_canceled"]), axis = 1)
-    data_frame = data_frame.drop(["previous_cancellations", "previous_bookings_not_canceled"], axis=1)
+    # normlizzazione del rateo di cancellazione
+    data_frame["CancelRate"] = data_frame.apply(lambda x : 0 if
+    x["PreviousCancellations"] + x["PreviousBookingsNotCanceled"]==0 else
+    x["PreviousCancellations"]/(x["PreviousCancellations"] + x["PreviousBookingsNotCanceled"]), axis = 1)
+    data_frame = data_frame.drop(["PreviousCancellations", "PreviousBookingsNotCanceled"], axis=1)
     # Conversione della feature sui giorni in lista d'attesa in feature booleana
     data_frame["WasInWaitingList"] = data_frame.apply(lambda x: 1 if x["DaysInWaitingList"] > 0 else 0, axis=1)
     data_frame = data_frame.drop("DaysInWaitingList", axis=1)
@@ -111,12 +116,12 @@ def main():
     args prende una tupla di argomenti in input, dato che il passaggio di data_frame è
     implicito, viene avvalorato solo con la tupla a singolo valore (table, )
     """
-    data_frame["Adr"] = data_frame.apply(refactor_adr, axis=1, args=(table, ))
+    data_frame["ADR"] = data_frame.apply(refactor_adr, axis=1, args=(table, ))
     data_frame = data_frame.drop(["ReservedRoomType", "ArrivalDateWeekNumber", "ArrivalDateYear"], axis=1)
 
     # Scrittura della tabella in un nuovo file
     # nb. lasciare r preposto al path per l'utilizzo di una stringa raw
-    data_frame.to_csv(r"..\datasets\city_hotels.csv", index=False)
+    data_frame.to_csv(("processed_" + argv[1]), index=False)
 
 
-main()
+main(argv[1])
