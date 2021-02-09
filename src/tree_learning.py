@@ -6,15 +6,10 @@ from sys import argv
 from os import path
 
 
-if not path.is_file(arv[1]):
-    print("Error: could not find specified CSV dataset")
+def train_tree(training_data_arr):
 
-training_data = pd.read_csv(argv[1])
-training_data = pd.get_dummies(training_data)
-training_data_arr = training_data.to_numpy()
-
-classifier = tree.DecisionTreeClassifier(max_depth=4)
-classifier = classifier.fit(training_data_arr[:, 1:], training_data_arr[:, 0])
+    X = training_data_arr[:, 1:]
+    Y = training_data_arr[:, 0]
 
     gr_class = GradientBoostingClassifier()
     gr_class = gr_class.fit(X, Y)
