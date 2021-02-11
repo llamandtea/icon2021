@@ -85,21 +85,31 @@ def main(file_path):
 
     data_frame = pd.read_csv(argv[1])
 
-    # Prima eliminazione delle colonne non utilizzate
+    print("Dropping unused columns...")
+    # Prima eliminazione delle colonne non utilizzate/ridondanti
     data_frame = data_frame.drop(
-        ["Agent", "Company", "Country", "AssignedRoomType", "RequiredCarParkingSpaces", "ReservationStatus"],
+        ["Agent", "Company", "Country", "AssignedRoomType", "RequiredCarParkingSpaces", "ReservationStatus",
+         "MarketSegment"],
         axis=1)
 
+    print("Joining Columns...")
     # Unione delle serie "children" e "babies"
     data_frame["Minors"] = data_frame.apply(lambda x: x["Children"]+x["Babies"], axis=1)
     data_frame["Minors"] = data_frame.apply(lambda x: 0 if isnan(x["Minors"]) else int(x["Minors"]), axis=1)
     data_frame = data_frame.drop(["Children", "Babies"], axis=1)
-    
+
+    # Unione delle serie "StaysInWeekendNights" e "StaysInWeekNights"
+    data_frame["Staying"] = data_frame.apply(lambda x: x["StaysInWeekendNights"]+x["StaysInWeekNights"], axis=1)
+    data_frame["Staying"] = data_frame.apply(lambda x: 0 if isnan(x["Staying"]) else int(x["Staying"]), axis=1)
+    data_frame = data_frame.drop(["StaysInWeekendNights", "StaysInWeekNights"], axis=1)
+
+    print("Creating engineered attributes...")
     # normlizzazione del rateo di cancellazione
     data_frame["CancelRate"] = data_frame.apply(lambda x : 0 if
-    x["PreviousCancellations"] + x["PreviousBookingsNotCanceled"]==0 else
-    x["PreviousCancellations"]/(x["PreviousCancellations"] + x["PreviousBookingsNotCanceled"]), axis = 1)
+    x["PreviousCancellations"] + x["PreviousBookingsNotCanceled"] == 0 else
+    x["PreviousCancellations"]/(x["PreviousCancellations"] + x["PreviousBookingsNotCanceled"]), axis=1)
     data_frame = data_frame.drop(["PreviousCancellations", "PreviousBookingsNotCanceled"], axis=1)
+
     # Conversione della feature sui giorni in lista d'attesa in feature booleana
     data_frame["WasInWaitingList"] = data_frame.apply(lambda x: 1 if x["DaysInWaitingList"] > 0 else 0, axis=1)
     data_frame = data_frame.drop("DaysInWaitingList", axis=1)
@@ -121,7 +131,9 @@ def main(file_path):
 
     # Scrittura della tabella in un nuovo file
     # nb. lasciare r preposto al path per l'utilizzo di una stringa raw
-    data_frame.to_csv(("processed_" + argv[1]), index=False)
+
+    data_frame.to_csv((path.dirname(argv[1]) + "//" + "processed_" + path.basename(argv[1])), index=False)
+    print("Done.")
 
 
 main(argv[1])
