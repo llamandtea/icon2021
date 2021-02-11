@@ -20,7 +20,7 @@ converte tutte le feature continue prima in split e poi in feature indicatrici
 restituisce inoltre il dataframe modificato e il nome delle colonne prima dell'applicazione del dummy
 """
 def refactorDataFrame(data_frame):
-    data_frame = data_frame.assign(Staying=data_frame["StaysInWeekendNights"] + data_frame["StaysInWeekNights"])
+
     X_adr = pd.cut(data_frame["ADR"], 3) #discretizza una colonna in n=3 intervalli (bins)
     X_lead = pd.cut(data_frame["LeadTime"], [0, 7, 30, 90, 180, 365, data_frame["LeadTime"].max()], include_lowest=True)
     X_stays_st = pd.cut(data_frame["Staying"], [0, 3, 7, 15, data_frame["Staying"].max()], include_lowest=True)
@@ -29,8 +29,7 @@ def refactorDataFrame(data_frame):
     X_cancel_rate = pd.cut(data_frame["CancelRate"], 2)
     X_minors = pd.cut(data_frame["Minors"], [0, 2, data_frame["Minors"].max()], include_lowest=True)
 
-    data_frame = data_frame.drop(["ADR", "LeadTime", "StaysInWeekendNights", "StaysInWeekNights", "BookingChanges", "Adults", "CancelRate", "Minors"], axis=1)
-    data_frame = data_frame.drop(["MarketSegment"], axis = 1)
+    data_frame = data_frame.drop(["ADR", "LeadTime", "Staying", "BookingChanges", "Adults", "CancelRate", "Minors"], axis=1)
 
     data_frame = data_frame.assign(ADR=X_adr)
     data_frame = data_frame.assign(LeadTime=X_lead)
