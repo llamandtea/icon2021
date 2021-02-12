@@ -4,6 +4,8 @@ Script per il pre-processing del dataset sulle prenotazioni di un hotel
 import pandas as pd
 import datetime as dt
 from math import isnan
+from sys import argv
+from os import path
 
 # Definizione dell'anno da utilizzare per i calcoli e le date nella look-up table
 # L'anno deve essere bisestile per prevenire eventuali errori di parsificazione della data
@@ -21,8 +23,8 @@ seasons = {
 
 def convert_to_season(x):
     """Funzione per convertire la data di arrivo in una riga in una stagione."""
-    d = dt.datetime.strptime(str(x["arrival_date_year"]) + " " + x["arrival_date_month"] + " "
-                             + str(x["arrival_date_day_of_month"]), "%Y %B %d").date()
+    d = dt.datetime.strptime(str(x["ArrivalDateYear"]) + " " + x["ArrivalDateMonth"] + " "
+                             + str(x["ArrivalDateDayOfMonth"]), "%Y %B %d").date()
     d = d.replace(year=LEAP_YEAR)
 
     if d < seasons["spring"]:
@@ -43,25 +45,25 @@ def refactor_lead_time(x):
     Converte, per le prenotazioni cancellate, il valore di "lead_time" pari al numero di giorni tra la
     prenotazione e la cancellazione
     """
-    if x["is_canceled"] == 1:
-        d = (dt.datetime.strptime(str(x["arrival_date_year"]) + " " + x["arrival_date_month"] + " "
-                                    + str(x["arrival_date_day_of_month"]), "%Y %B %d") - dt.timedelta(x["lead_time"]))
-        return (dt.datetime.strptime(x["reservation_status_date"], "%Y-%m-%d") - d).days
+    if x["IsCanceled"] == 1:
+        d = (dt.datetime.strptime(str(x["ArrivalDateYear"]) + " " + x["ArrivalDateMonth"] + " "
+                                    + str(x["ArrivalDateDayOfMonth"]), "%Y %B %d") - dt.timedelta(x["LeadTime"]))
+        return (dt.datetime.strptime(x["ReservationStatusDate"], "%Y-%m-%d") - d).days
     else:
-        return x["lead_time"]
+        return x["LeadTime"]
 
 
 def lookup_adr(x):
     lookup_table = {}
     count_table = {}
     for i, row in x.iterrows():
-        key = str(row["arrival_date_year"]) + str(row["arrival_date_week_number"]) + str(row["reserved_room_type"])\
-              + str(row["distribution_channel"])
+        key = str(row["ArrivalDateYear"]) + str(row["ArrivalDateWeekNumber"]) + str(row["ReservedRoomType"])\
+              + str(row["DistributionChannel"])
         if lookup_table.get(key) is None:
-            lookup_table[key] = row["adr"]
+            lookup_table[key] = row["ADR"]
             count_table[key] = 1
         else:
-            lookup_table[key] += row["adr"]
+            lookup_table[key] += row["ADR"]
             count_table[key] += 1
     for key in lookup_table:
         # troncamento a due cifre
@@ -70,40 +72,52 @@ def lookup_adr(x):
 
 
 def refactor_adr(x, table):
-    key = str(x["arrival_date_year"]) + str(x["arrival_date_week_number"]) + str(x["reserved_room_type"])\
-          + str(x["distribution_channel"])
+    key = str(x["ArrivalDateYear"]) + str(x["ArrivalDateWeekNumber"]) + str(x["ReservedRoomType"])\
+          + str(x["DistributionChannel"])
     return table.get(key)
 
 
-def main():
+def main(file_path):
     # Caricamento del dataset in memoria
-    data_frame = pd.read_csv("../hotel_bookings.csv")
+    if not path.isfile(file_path):
+        print("Error: could not find specified CSV dataset")
+        return
 
-    # TODO: pulizia del dataset
-    # Prima eliminazione delle colonne non utilizzate
+    data_frame = pd.read_csv(argv[1])
+
+    print("Dropping unused columns...")
+    # Prima eliminazione delle colonne non utilizzate/ridondanti
     data_frame = data_frame.drop(
-        ["agent", "company", "country", "assigned_room_type", "required_car_parking_spaces", "reservation_status"],
+        ["Agent", "Company", "Country", "AssignedRoomType", "RequiredCarParkingSpaces", "ReservationStatus",
+         "MarketSegment"],
         axis=1)
 
+    print("Joining Columns...")
     # Unione delle serie "children" e "babies"
-    data_frame["minors"] = data_frame.apply(lambda x: x["children"]+x["babies"], axis=1)
-    data_frame["minors"] = data_frame.apply(lambda x: 0 if isnan(x["minors"]) else int(x["minors"]), axis=1)
-    data_frame = data_frame.drop(["children", "babies"], axis=1)
-    
-    #normlizzazione del rateo di cancellazione
+    data_frame["Minors"] = data_frame.apply(lambda x: x["Children"]+x["Babies"], axis=1)
+    data_frame["Minors"] = data_frame.apply(lambda x: 0 if isnan(x["Minors"]) else int(x["Minors"]), axis=1)
+    data_frame = data_frame.drop(["Children", "Babies"], axis=1)
 
-    data_frame["cancel_rate"] = data_frame.apply(lambda x : 0 if
-    x["previous_cancellations"] + x["previous_bookings_not_canceled"]==0 else
-    x["previous_cancellations"]/(x["previous_cancellations"] + x["previous_bookings_not_canceled"]), axis = 1)
-    data_frame = data_frame.drop(["previous_cancellations", "previous_bookings_not_canceled"], axis=1)
+    # Unione delle serie "StaysInWeekendNights" e "StaysInWeekNights"
+    data_frame["Staying"] = data_frame.apply(lambda x: x["StaysInWeekendNights"]+x["StaysInWeekNights"], axis=1)
+    data_frame["Staying"] = data_frame.apply(lambda x: 0 if isnan(x["Staying"]) else int(x["Staying"]), axis=1)
+    data_frame = data_frame.drop(["StaysInWeekendNights", "StaysInWeekNights"], axis=1)
+
+    print("Creating engineered attributes...")
+    # normlizzazione del rateo di cancellazione
+    data_frame["CancelRate"] = data_frame.apply(lambda x : 0 if
+    x["PreviousCancellations"] + x["PreviousBookingsNotCanceled"] == 0 else
+    x["PreviousCancellations"]/(x["PreviousCancellations"] + x["PreviousBookingsNotCanceled"]), axis=1)
+    data_frame = data_frame.drop(["PreviousCancellations", "PreviousBookingsNotCanceled"], axis=1)
+
     # Conversione della feature sui giorni in lista d'attesa in feature booleana
-    data_frame["was_in_waiting_list"] = data_frame.apply(lambda x: 1 if x["days_in_waiting_list"] > 0 else 0, axis=1)
-    data_frame = data_frame.drop("days_in_waiting_list", axis=1)
+    data_frame["WasInWaitingList"] = data_frame.apply(lambda x: 1 if x["DaysInWaitingList"] > 0 else 0, axis=1)
+    data_frame = data_frame.drop("DaysInWaitingList", axis=1)
 
     table = lookup_adr(data_frame)
-    data_frame["season"] = data_frame.apply(convert_to_season, axis=1)
-    data_frame["lead_time"] = data_frame.apply(refactor_lead_time, axis=1)
-    data_frame = data_frame.drop(["reservation_status_date", "arrival_date_month", "arrival_date_day_of_month"], axis=1)
+    data_frame["Season"] = data_frame.apply(convert_to_season, axis=1)
+    data_frame["LeadTime"] = data_frame.apply(refactor_lead_time, axis=1)
+    data_frame = data_frame.drop(["ReservationStatusDate", "ArrivalDateMonth", "ArrivalDateDayOfMonth"], axis=1)
 
     """
     Normalizzazione dei valori dell'ADR come media per possibile configurazione di 
@@ -112,12 +126,14 @@ def main():
     args prende una tupla di argomenti in input, dato che il passaggio di data_frame è
     implicito, viene avvalorato solo con la tupla a singolo valore (table, )
     """
-    data_frame["adr"] = data_frame.apply(refactor_adr, axis=1, args=(table, ))
-    data_frame = data_frame.drop(["reserved_room_type", "arrival_date_week_number", "arrival_date_year"], axis=1)
+    data_frame["ADR"] = data_frame.apply(refactor_adr, axis=1, args=(table, ))
+    data_frame = data_frame.drop(["ReservedRoomType", "ArrivalDateWeekNumber", "ArrivalDateYear"], axis=1)
 
     # Scrittura della tabella in un nuovo file
     # nb. lasciare r preposto al path per l'utilizzo di una stringa raw
-    data_frame.to_csv(r"..\hotel_bookings_updated.csv", index=False)
+
+    data_frame.to_csv((path.dirname(argv[1]) + "//" + "processed_" + path.basename(argv[1])), index=False)
+    print("Done.")
 
 
-main()
+main(argv[1])
