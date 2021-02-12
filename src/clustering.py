@@ -59,18 +59,20 @@ def refactor_data_frame(data_frame):
     return data_frame, features
 
 
-def k_means_random_restart(data_frame, iter, nclusters):
+def k_means_random_restart(data_frame, iterations, nclusters):
     """
     Funzione che effettua il clustering attraverso quanto messo a disposizione dalla libreria sklearn per ottenere
     nclusters cluster. Iter indica, invece, il numero random restart da rieseguire per ottenere l'ottimo locale.
+    Non viene utilizzato il parametro n_init della funzione di sklearn perchè si vuole avere un feedback sull'andamento
+    delle iterazioni
     """
     print("Starting clustering...")
 
     # Inizializzazione del miglior cluster
     best_cluster = cluster.KMeans(n_clusters=nclusters, random_state=np.random.randint(1, 40000)).fit(data_frame)
 
-    for i in range(0, iter):
-        current_cluster = cluster.KMeans(n_clusters=nclusters, random_state=np.random.randint(1, 40000)).fit(data_frame)
+    for i in range(0, iterations):
+        current_cluster = cluster.KMeans(n_clusters=nclusters, n_init=1).fit(data_frame)
         if best_cluster.inertia_ > current_cluster.inertia_ :
             best_cluster = current_cluster
         if (i + 1) % 10 == 0:
@@ -137,7 +139,6 @@ def plot_centroids(modified_centroids):
                                   color_continuous_midpoint=2)
     fig.show()
 
-
 def main():
 
     """
@@ -157,16 +158,16 @@ def main():
 
     try:
         if int(argv[2]) > 0:
-            iter = arv[2]
+            iterations = int(argv[2])
         else:
             print("Error: specified non positive number of iterations.")
             return
     except IndexError:
-        iter = 10
+        iterations = 10
 
     try:
         if int(argv[3]) > 0:
-            n_clusters = argv[3]
+            n_clusters = int(argv[3])
         else:
             print("Error: specified non positive number of clusters.")
             return
@@ -175,15 +176,42 @@ def main():
 
     data_frame = pd.read_csv(argv[1])
     (data_frame, features) = refactor_data_frame(data_frame)
-    best_cluster = k_means_random_restart(data_frame, iter, n_clusters)
+    best_cluster = k_means_random_restart(data_frame, iterations, n_clusters)
     centroids = dummy_inversion(data_frame, features, best_cluster)
-#    centroids.to_csv("centroidi.csv")
 
-    ord_enc = OrdinalEncoder()
-    modified_centroids = pd.DataFrame(data=ord_enc.fit_transform(centroids), columns=centroids.columns)
-    print(modified_centroids)
-    modified_centroids["Labels"] = [i for i in range(1, nclusters+1)]
-    plot_centroids(modified_centroids)
+    #ai centroidi si vuole aggiungere il numero di esempi che raggruppano
+    labels, count = np.unique(best_cluster.labels_, return_counts=True)
+    centroids = centroids.assign(N_Examples=count)
 
+    centroids.to_csv("centroidi.csv", index=False)
+
+#    ord_enc = OrdinalEncoder()
+#    modified_centroids = pd.DataFrame(data=ord_enc.fit_transform(centroids), columns=centroids.columns)
+#    print(modified_centroids)
+#    modified_centroids["Labels"] = [i for i in range(1, nclusters+1)]
+#    plot_centroids(modified_centroids)
+
+def k_elbow_plot(fpath, max=10):
+    if not path.isfile(fpath):
+        print("Error: could not find specified CSV dataset.")
+        return
+    if max <= 0:
+        print("Error: k must be a positive integer.")
+        return
+
+    data,features = refactor_data_frame(pd.read_csv(fpath))
+    errors = []
+    for k in range(1, max+1) :
+        kmeans = cluster.KMeans(n_clusters=k)
+        kmeans.fit(data)
+        errors.append(kmeans.inertia_)
+        print("DONE WITH K=" + str(k))
+    plt.figure(figsize=(16,8))
+    plt.plot(range(1, max+1), errors, 'bo-')
+    plt.xlabel('#Clusters (K)')
+    plt.ylabel('Errore (SSE)')
+    plt.title("Rapporto parametro K/errore del dataset " + path.basename(fpath))
+    plt.show()
 
 main()
+#k_elbow_plot(fpath="../datasets/processed_city_hotel.csv", max=15)
