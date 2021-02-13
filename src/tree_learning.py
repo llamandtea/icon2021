@@ -69,6 +69,7 @@ def print_scores(true_y, pred_y, beta=1.0):
 def main():
     if not path.isfile(argv[1]):
         print("Error: could not find specified CSV dataset for training")
+        return
 
     try:
         n_folds = int(argv[2])
