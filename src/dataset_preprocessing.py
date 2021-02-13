@@ -77,7 +77,7 @@ def refactor_adr(x, table):
     return table.get(key)
 
 
-def main(file_path):
+def main(file_path, maintain_original_lead_time=False):
     # Caricamento del dataset in memoria
     if not path.isfile(file_path):
         print("Error: could not find specified CSV dataset")
@@ -116,7 +116,12 @@ def main(file_path):
 
     table = lookup_adr(data_frame)
     data_frame["Season"] = data_frame.apply(convert_to_season, axis=1)
+
+    if maintain_original_lead_time:
+        data_frame["OriginalLeadTime"] = data_frame["LeadTime"]
+
     data_frame["LeadTime"] = data_frame.apply(refactor_lead_time, axis=1)
+
     data_frame = data_frame.drop(["ReservationStatusDate", "ArrivalDateMonth", "ArrivalDateDayOfMonth"], axis=1)
 
     """
@@ -136,4 +141,5 @@ def main(file_path):
     print("Done.")
 
 
-main(argv[1])
+main(argv[1], True)
+

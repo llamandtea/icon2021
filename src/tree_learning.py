@@ -1,6 +1,9 @@
 from sklearn import model_selection, tree
+from pydotplus import graph_from_dot_data
+from IPython.display import Image, display
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from matplotlib import pyplot as plt
 import pandas as pd
 from sys import argv
 from os import path
@@ -16,14 +19,18 @@ def train_tree(training_data_arr):
     return gr_class
 
 
-def kfold(training_data_arr, n_folds):
+def kfold(training_data_arr, n_folds, x_start, x_end, y_index, is_regressor=False):
 
     kf = model_selection.KFold(n_splits=n_folds)
     i = 0
     j = 1
     max_score_grad = 0
     gr_score = 0
-    gr_class = GradientBoostingClassifier()
+    if is_regressor:
+        gr_class = GradientBoostingRegressor()
+    else:
+        gr_class = GradientBoostingClassifier()
+
     for train, test in kf.split(training_data_arr):
         gr_class = gr_class.fit(training_data_arr[train, 1:], training_data_arr[train, 0])
         gr_score = gr_class.score(training_data_arr[test, 1:], training_data_arr[test, 0])
@@ -65,6 +72,10 @@ def print_scores(true_y, pred_y, beta=1.0):
     print("F-measure" + ":\t" + str(f_sc))
     print("(beta " + str(beta) + ")")
 
+def cancellation_minus_arrival(data_frame):
+        data_frame["CancellationMinusArrival"] = data_frame.apply(lambda x:   x["OriginalLeadTime"]-x["LeadTime"], axis=1)
+        return data_frame
+
 
 def main():
     if not path.isfile(argv[1]):
@@ -83,16 +94,39 @@ def main():
     training_data = pd.get_dummies(training_data)
     training_data_arr = training_data.to_numpy()
     single_classifier = train_tree(training_data_arr)
-    folded_classifier, score = kfold(training_data_arr, n_folds)
+    folded_classifier, score = kfold(training_data_arr, n_folds, 1, len(training_data.columns.tolist()) - 1, 0)
     print("\n----MEAN SCORE----")
     print(str(n_folds) + "-folds classifier mean score: " + str(score))
 
-"""
-        dot_data = tree.export_graphviz(t, out_file=(str(index) + "graph.dot"),
-                                        feature_names=training_data.columns.to_list()[1:],
-                                        class_names=["True", "False"],
-                                        filled=True,
-                                        rounded=True)
-"""
+    # Apprendimento di un albero per la previsione del numero di giorni che trascorreranno prima della cancellazione
+    # di una prenotazione
+    to_drop = training_data[(training_data["IsCanceled"] == 0)].index
+    training_data_canceled = training_data.drop(to_drop, axis=0)
+    training_data_canceled_arr = training_data_canceled.to_numpy()
+    canc_minus_arrival_regressor = train_regression_tree(training_data_canceled_arr, len(training_data_canceled.columns.tolist()))
+    best_canc_minus_arrival_regressor, reg_score = kfold(training_data_arr, n_folds, 0, len(training_data.columns.tolist()) - 2,
+                                              len(training_data.columns.tolist()) - 1)
+
+    print("\n----MEAN SCORE----")
+    print(str(n_folds) + "-folds classifier mean score: " + str(reg_score))
+
+
+    target_names_classification = training_data["IsCanceled"].unique().tolist()
+    first_dot = tree.export_graphviz(folded_classifier.estimators_[42, 0],
+                feature_names=training_data.columns.tolist()[2:],
+                class_names=target_names_classification,
+                filled=True,
+                rounded=True,
+                out_file="..\\res\\" + path.basename(argv[1]).replace(".csv", "") + "_canceled_classifier_42.dot")
+
+    target_names_regression = training_data["CancellationMinusArrival"].unique().tolist()
+
+    second_dot = tree.export_graphviz(best_canc_minus_arrival_regressor.estimators_[42, 0],
+                feature_names=training_data.columns.tolist()[1: len(training_data_canceled.columns.tolist())-1],
+                class_names=target_names_regression,
+                filled=True,
+                rounded=True,
+                out_file="..\\res\\" + path.basename(argv[1]).replace(".csv", "") + "_days_regressor_42.dot")
+
 
 main()
