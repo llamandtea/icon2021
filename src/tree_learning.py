@@ -20,15 +20,6 @@ def train_tree(training_data_arr):
     return gr_class
 
 
-def train_regression_tree(training_data_arr, n_col):
-    X = training_data_arr[:, :(n_col-2)]
-    Y = training_data_arr[:, (n_col-1)]
-
-    grr_class = GradientBoostingRegressor()
-    grr_class = grr_class.fit(X, Y)
-    return grr_class
-
-
 def kfold(training_data_arr, n_folds, x_start, x_end, y_index, is_regressor=False):
 
     kf = model_selection.KFold(n_splits=n_folds)
@@ -82,10 +73,8 @@ def print_scores(true_y, pred_y, beta=1.0):
     print("F-measure" + ":\t" + str(f_sc))
     print("(beta " + str(beta) + ")")
 
-
 def cancellation_minus_arrival(data_frame):
-        data_frame["CancellationMinusArrival"] = data_frame.apply(lambda x:   x["OriginalLeadTime"]-x["LeadTime"], axis=1)
-        return data_frame
+        return data_frame["OriginalLeadTime"] - data_frame["LeadTime"]
 
 
 def main():
@@ -103,33 +92,37 @@ def main():
     training_data = pd.read_csv(argv[1])
 
     # Aggiunta della colonna che demarca lo scarto fra il giorno di cancellazione e l'originale giorno di arrivo
-    training_data = cancellation_minus_arrival(training_data)
+    notice_days = cancellation_minus_arrival(data_frame=training_data)
     training_data = training_data.drop(["OriginalLeadTime"], axis=1)
 
     training_data = training_data.sample(frac=1)
     training_data = pd.get_dummies(training_data)
     training_data_arr = training_data.to_numpy()
-    single_classifier = train_tree(training_data_arr)
-    folded_classifier, score = kfold(training_data_arr, n_folds, 1, len(training_data.columns.tolist()) - 1, 0)
+    folded_classifier, score = kfold(training_data_arr, n_folds, 1, -1, 0)
     print("\n----MEAN SCORE----")
     print(str(n_folds) + "-folds classifier mean score: " + str(score))
 
     # Apprendimento di un albero per la previsione del numero di giorni che trascorreranno prima della cancellazione
     # di una prenotazione
     to_drop = training_data[(training_data["IsCanceled"] == 0)].index
+    training_data_canceled = training_data
+    training_data_canceled = training_data_canceled.assign(CancellationMinusArrival=notice_days)
     training_data_canceled = training_data.drop(to_drop, axis=0)
+    training_data_canceled = training_data_canceled.drop("IsCanceled", axis=1)
     training_data_canceled_arr = training_data_canceled.to_numpy()
-    canc_minus_arrival_regressor = train_regression_tree(training_data_canceled_arr, len(training_data_canceled.columns.tolist()))
-    best_canc_minus_arrival_regressor, reg_score = kfold(training_data_arr, n_folds, 0, len(training_data.columns.tolist()) - 2,
-                                              len(training_data.columns.tolist()) - 1)
+    best_canc_minus_arrival_regressor, reg_score = kfold(training_data_arr,
+                                                         n_folds,
+                                                         0, -2, -1)
 
     print("\n----MEAN SCORE----")
     print(str(n_folds) + "-folds classifier mean score: " + str(reg_score))
 
 
     target_names_classification = training_data["IsCanceled"].unique().tolist()
+    print(training_data.columns.tolist())
+
     first_dot = tree.export_graphviz(folded_classifier.estimators_[42, 0],
-                feature_names=training_data.columns.tolist()[2:],
+                feature_names=training_data.columns.tolist(),
                 class_names=target_names_classification,
                 filled=True,
                 rounded=True,
@@ -138,7 +131,7 @@ def main():
     target_names_regression = training_data["CancellationMinusArrival"].unique().tolist()
 
     second_dot = tree.export_graphviz(best_canc_minus_arrival_regressor.estimators_[42, 0],
-                feature_names=training_data.columns.tolist()[1: len(training_data_canceled.columns.tolist())-1],
+                feature_names=training_data.columns.tolist(),
                 class_names=target_names_regression,
                 filled=True,
                 rounded=True,
