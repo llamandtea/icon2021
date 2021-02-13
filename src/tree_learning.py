@@ -2,6 +2,7 @@ from sklearn import model_selection, tree
 from pydotplus import graph_from_dot_data
 from IPython.display import Image, display
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from matplotlib import pyplot as plt
 import pandas as pd
@@ -19,6 +20,15 @@ def train_tree(training_data_arr):
     return gr_class
 
 
+def train_regression_tree(training_data_arr, n_col):
+    X = training_data_arr[:, :(n_col-2)]
+    Y = training_data_arr[:, (n_col-1)]
+
+    grr_class = GradientBoostingRegressor()
+    grr_class = grr_class.fit(X, Y)
+    return grr_class
+
+
 def kfold(training_data_arr, n_folds, x_start, x_end, y_index, is_regressor=False):
 
     kf = model_selection.KFold(n_splits=n_folds)
@@ -32,12 +42,12 @@ def kfold(training_data_arr, n_folds, x_start, x_end, y_index, is_regressor=Fals
         gr_class = GradientBoostingClassifier()
 
     for train, test in kf.split(training_data_arr):
-        gr_class = gr_class.fit(training_data_arr[train, 1:], training_data_arr[train, 0])
-        gr_score = gr_class.score(training_data_arr[test, 1:], training_data_arr[test, 0])
+        gr_class = gr_class.fit(training_data_arr[train, x_start:x_end], training_data_arr[train, y_index])
+        gr_score = gr_class.score(training_data_arr[test, x_start:x_end], training_data_arr[test, y_index])
 
         print("--------MODEL " + str(j) + " QUALITY--------")
-        true_y = training_data_arr[test, 0]
-        pred_y = gr_class.predict(training_data_arr[test, 1:])
+        true_y = training_data_arr[test, y_index]
+        pred_y = gr_class.predict(training_data_arr[test, x_start:x_end])
         print_scores(true_y=true_y, pred_y=pred_y, beta=2.0)
 
         if gr_score > max_score_grad:
@@ -72,6 +82,7 @@ def print_scores(true_y, pred_y, beta=1.0):
     print("F-measure" + ":\t" + str(f_sc))
     print("(beta " + str(beta) + ")")
 
+
 def cancellation_minus_arrival(data_frame):
         data_frame["CancellationMinusArrival"] = data_frame.apply(lambda x:   x["OriginalLeadTime"]-x["LeadTime"], axis=1)
         return data_frame
@@ -90,6 +101,11 @@ def main():
         n_folds = 10
 
     training_data = pd.read_csv(argv[1])
+
+    # Aggiunta della colonna che demarca lo scarto fra il giorno di cancellazione e l'originale giorno di arrivo
+    training_data = cancellation_minus_arrival(training_data)
+    training_data = training_data.drop(["OriginalLeadTime"], axis=1)
+
     training_data = training_data.sample(frac=1)
     training_data = pd.get_dummies(training_data)
     training_data_arr = training_data.to_numpy()
