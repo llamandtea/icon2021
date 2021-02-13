@@ -129,6 +129,8 @@ def main(file_path):
     data_frame["ADR"] = data_frame.apply(refactor_adr, axis=1, args=(table, ))
     data_frame = data_frame.drop(["ReservedRoomType", "ArrivalDateWeekNumber", "ArrivalDateYear"], axis=1)
 
+
+
     # Scrittura della tabella in un nuovo file
     # nb. lasciare r preposto al path per l'utilizzo di una stringa raw
 
