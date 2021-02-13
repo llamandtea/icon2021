@@ -20,6 +20,15 @@ def train_tree(training_data_arr):
     return gr_class
 
 
+def train_regression_tree(training_data_arr, n_col):
+    X = training_data_arr[:, :(n_col-2)]
+    Y = training_data_arr[:, (n_col-1)]
+
+    grr_class = GradientBoostingRegressor()
+    grr_class = grr_class.fit(X, Y)
+    return grr_class
+
+
 def kfold(training_data_arr, n_folds, x_start, x_end, y_index, is_regressor=False):
 
     kf = model_selection.KFold(n_splits=n_folds)
@@ -72,6 +81,7 @@ def print_scores(true_y, pred_y, beta=1.0):
     print("Recall:\t\t" + str(rec))
     print("F-measure" + ":\t" + str(f_sc))
     print("(beta " + str(beta) + ")")
+
 
 def cancellation_minus_arrival(data_frame):
         return data_frame["OriginalLeadTime"] - data_frame["LeadTime"]
