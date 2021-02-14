@@ -124,16 +124,16 @@ def main():
                                                          is_regressor=True)
 
     print("\n----MEAN SCORE----")
-    print(str(n_folds) + "-folds classifier mean score: " + str(reg_score))
+    print(str(n_folds) + "-folds regressor mean score: " + str(reg_score))
 
     target_names_classification = training_data["IsCanceled"].unique().tolist()
 
-    first_dot = tree.export_graphviz(best_classifier.estimators_[42, 0],
+    first_dot = tree.export_graphviz(best_classifier.estimators_[0, 0],
                 feature_names=training_data.columns.tolist()[1:],
                 class_names=target_names_classification,
                 filled=True,
                 rounded=True,
-                out_file="..\\res\\" + path.basename(argv[1]).replace(".csv", "") + "_canceled_classifier_42.dot")
+                out_file="..\\res\\" + path.basename(argv[1]).replace(".csv", "") + "_canceled_classifier_0.dot")
 
     target_names_regression = training_data_canceled["CancellationMinusArrival"].unique().tolist()
 
