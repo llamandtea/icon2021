@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from sys import argv
 from os import path
+import numpy as np
 
 
 def train_tree(training_data_arr):
