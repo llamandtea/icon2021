@@ -1,0 +1,4 @@
+Per entrambi i metodi di clustering è stato scelto un numero di inizializzazioni pari a 50
+Per l'hotel resort è stato selezionato k=4 e per l'hotel di città, k=6
+best cost per il resort:107237.0
+best cost per l'hotel di città: 197730.0
