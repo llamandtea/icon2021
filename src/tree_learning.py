@@ -1,9 +1,11 @@
 from sklearn import model_selection, tree
 from pydotplus import graph_from_dot_data
 from IPython.display import Image, display
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.experimental import enable_hist_gradient_boosting  # noqa
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor, HistGradientBoostingRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.metrics import precision_recall_fscore_support, mean_absolute_error,\
+    mean_squared_error, accuracy_score, max_error
 from matplotlib import pyplot as plt
 import pandas as pd
 from sys import argv
@@ -37,21 +39,28 @@ def kfold(training_data_arr, n_folds, x_start, x_end, y_index, is_regressor=Fals
     max_score_grad = 0
     gr_score = 0
     if is_regressor:
-        gr_class = GradientBoostingRegressor()
+        gr_class = HistGradientBoostingRegressor()
     else:
         gr_class = GradientBoostingClassifier()
 
     for train, test in kf.split(training_data_arr):
+        print("Fold " + str(j) + "/" + str(n_folds))
         gr_class = gr_class.fit(training_data_arr[train, x_start:x_end], training_data_arr[train, y_index])
         gr_score = gr_class.score(training_data_arr[test, x_start:x_end], training_data_arr[test, y_index])
 
         print("--------MODEL " + str(j) + " QUALITY--------")
         true_y = training_data_arr[test, y_index]
         pred_y = gr_class.predict(training_data_arr[test, x_start:x_end])
-        print_scores(true_y=true_y, pred_y=pred_y, beta=2.0)
+
+        if not is_regressor:
+            print_classifier_scores(true_y=true_y, pred_y=pred_y, beta=2.0)
+        else:
+            print_regressor_scores(true_y=true_y, pred_y=pred_y)
 
         if gr_score > max_score_grad:
             best_class_gr = gr_class
+            max_score_grad = gr_score
+
         j += 1
         i += gr_score
 
@@ -60,7 +69,16 @@ def kfold(training_data_arr, n_folds, x_start, x_end, y_index, is_regressor=Fals
     return best_class_gr, mean_score
 
 
-def print_scores(true_y, pred_y, beta=1.0):
+def print_regressor_scores(true_y, pred_y):
+    mse = mean_squared_error(true_y, pred_y)
+    mae = mean_absolute_error(true_y, pred_y)
+    max = max_error(true_y, pred_y)
+    print("Mean Squared Error:\t" + str(mse))
+    print("Mean Absolute Error:\t" + str(mae))
+    print("Max Error:\t\t" + str(max))
+
+
+def print_classifier_scores(true_y, pred_y, beta=1.0):
     """
 
     Parameters
@@ -108,40 +126,40 @@ def main():
     training_data = training_data.sample(frac=1)
     training_data = pd.get_dummies(training_data)
     training_data_arr = training_data.to_numpy()
-    folded_classifier, score = kfold(training_data_arr, n_folds, 1, -1, 0)
+    folded_classifier, score = kfold(training_data_arr, n_folds, 1, training_data_arr.shape[1], 0)
     print("\n----MEAN SCORE----")
     print(str(n_folds) + "-folds classifier mean score: " + str(score))
 
     # Apprendimento di un albero per la previsione del numero di giorni che trascorreranno prima della cancellazione
     # di una prenotazione
     to_drop = training_data[(training_data["IsCanceled"] == 0)].index
-    training_data_canceled = training_data
-    training_data_canceled = training_data_canceled.assign(CancellationMinusArrival=notice_days)
-    training_data_canceled = training_data.drop(to_drop, axis=0)
+    training_data_canceled = training_data.copy()
+    training_data_canceled["CancellationMinusArrival"] = notice_days
+    training_data_canceled = training_data_canceled.drop(to_drop, axis=0)
     training_data_canceled = training_data_canceled.drop("IsCanceled", axis=1)
     training_data_canceled_arr = training_data_canceled.to_numpy()
-    best_canc_minus_arrival_regressor, reg_score = kfold(training_data_arr,
+    best_canc_minus_arrival_regressor, reg_score = kfold(training_data_canceled_arr,
                                                          n_folds,
-                                                         0, -2, -1)
+                                                         0, -2,
+                                                         training_data_canceled_arr.shape[1] - 1,
+                                                         is_regressor=True)
 
     print("\n----MEAN SCORE----")
     print(str(n_folds) + "-folds classifier mean score: " + str(reg_score))
 
-
     target_names_classification = training_data["IsCanceled"].unique().tolist()
-    print(training_data.columns.tolist())
 
     first_dot = tree.export_graphviz(folded_classifier.estimators_[42, 0],
-                feature_names=training_data.columns.tolist(),
+                feature_names=training_data.columns.tolist()[1:],
                 class_names=target_names_classification,
                 filled=True,
                 rounded=True,
                 out_file="..\\res\\" + path.basename(argv[1]).replace(".csv", "") + "_canceled_classifier_42.dot")
 
-    target_names_regression = training_data["CancellationMinusArrival"].unique().tolist()
+    target_names_regression = training_data_canceled["CancellationMinusArrival"].unique().tolist()
 
-    second_dot = tree.export_graphviz(best_canc_minus_arrival_regressor.estimators_[42, 0],
-                feature_names=training_data.columns.tolist(),
+    second_dot = tree.export_graphviz(best_canc_minus_arrival_regressor,#.estimators_[42, 0],
+                feature_names=training_data_canceled.columns.tolist()[:-2],
                 class_names=target_names_regression,
                 filled=True,
                 rounded=True,
