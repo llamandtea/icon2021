@@ -1,0 +1,7 @@
+IsCanceled,Meal,DistributionChannel,IsRepeatedGuest,DepositType,CustomerType,TotalOfSpecialRequests,WasInWaitingList,Season,ADR,LeadTime,BookingChanges,Adults,CancelRate,Minors,Staying,N_Examples
+1,BB       ,TA/TO,0,Non Refund     ,Transient,0,0,spring,"(-0.311, 103.593]","(30.0, 90.0]","(-0.001, 5.0]","(1.0, 4.0]","(-0.001, 0.5]","(-0.001, 2.0]","(-0.001, 3.0]",12831
+0,BB       ,TA/TO,0,No Deposit     ,Transient,0,0,summer,"(103.593, 207.187]","(30.0, 90.0]","(-0.001, 5.0]","(1.0, 4.0]","(-0.001, 0.5]","(-0.001, 2.0]","(3.0, 7.0]",13961
+0,BB       ,TA/TO,0,No Deposit     ,Transient,0,0,spring,"(103.593, 207.187]","(-0.001, 7.0]","(-0.001, 5.0]","(1.0, 4.0]","(-0.001, 0.5]","(-0.001, 2.0]","(-0.001, 3.0]",13574
+0,BB       ,TA/TO,0,No Deposit     ,Transient,1,0,summer,"(103.593, 207.187]","(30.0, 90.0]","(-0.001, 5.0]","(1.0, 4.0]","(-0.001, 0.5]","(-0.001, 2.0]","(-0.001, 3.0]",9906
+0,BB       ,TA/TO,0,No Deposit     ,Transient,0,0,winter,"(-0.311, 103.593]","(-0.001, 7.0]","(-0.001, 5.0]","(1.0, 4.0]","(-0.001, 0.5]","(-0.001, 2.0]","(-0.001, 3.0]",14019
+0,BB       ,TA/TO,0,No Deposit     ,Transient-Party,0,0,summer,"(-0.311, 103.593]","(30.0, 90.0]","(-0.001, 5.0]","(1.0, 4.0]","(-0.001, 0.5]","(-0.001, 2.0]","(-0.001, 3.0]",15039

@@ -1,0 +1,4 @@
+Per entrambi gli insiemi di centroidi la cardinalità scelta è stata K=6
+e l'algoritmo è riavviato con random restart per 200 volte
+SSE City Hotel: 277790.5765291267
+SSE Resort Hotel: 139262.72730651425
