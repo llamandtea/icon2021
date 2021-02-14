@@ -1,83 +1,59 @@
 from sklearn import model_selection, tree
-from pydotplus import graph_from_dot_data
-from IPython.display import Image, display
-from sklearn.experimental import enable_hist_gradient_boosting  # noqa
-from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor, HistGradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.metrics import precision_recall_fscore_support, mean_absolute_error,\
-    mean_squared_error, accuracy_score, max_error
-from matplotlib import pyplot as plt
+from sklearn.metrics import precision_recall_fscore_support, mean_absolute_error, mean_squared_error, accuracy_score,\
+    max_error
 import pandas as pd
 from sys import argv
 from os import path
-import numpy as np
+import pickle
 
 
-def train_tree(training_data_arr):
-
-    X = training_data_arr[:, 1:]
-    Y = training_data_arr[:, 0]
-
-    gr_class = GradientBoostingClassifier()
-    gr_class = gr_class.fit(X, Y)
-    return gr_class
-
-
-def train_regression_tree(training_data_arr, n_col):
-    X = training_data_arr[:, :(n_col-2)]
-    Y = training_data_arr[:, (n_col-1)]
-
-    grr_class = GradientBoostingRegressor()
-    grr_class = grr_class.fit(X, Y)
-    return grr_class
-
-
-def kfold(training_data_arr, n_folds, x_start, x_end, y_index, is_regressor=False):
+def k_fold(training_data_arr, n_folds, x_start, x_end, y_index, is_regressor=False):
 
     kf = model_selection.KFold(n_splits=n_folds)
     i = 0
     j = 1
-    max_score_grad = 0
-    gr_score = 0
+    max_score = 0
+    curr_score = 0
     if is_regressor:
-        gr_class = DecisionTreeRegressor(max_depth=5)
+        curr_tree = DecisionTreeRegressor(max_depth=5)
     else:
-        gr_class = GradientBoostingClassifier()
+        curr_tree = GradientBoostingClassifier()
 
     for train, test in kf.split(training_data_arr):
         print("Fold " + str(j) + "/" + str(n_folds))
-        gr_class = gr_class.fit(training_data_arr[train, x_start:x_end], training_data_arr[train, y_index])
-        gr_score = gr_class.score(training_data_arr[test, x_start:x_end], training_data_arr[test, y_index])
+        curr_tree = curr_tree.fit(training_data_arr[train, x_start:x_end], training_data_arr[train, y_index])
+        curr_score = curr_tree.score(training_data_arr[test, x_start:x_end], training_data_arr[test, y_index])
 
         print("--------MODEL " + str(j) + " QUALITY--------")
         true_y = training_data_arr[test, y_index]
-        pred_y = gr_class.predict(training_data_arr[test, x_start:x_end])
+        pred_y = curr_tree.predict(training_data_arr[test, x_start:x_end])
 
         if not is_regressor:
             print_classifier_scores(true_y=true_y, pred_y=pred_y, beta=2.0)
         else:
             print_regressor_scores(true_y=true_y, pred_y=pred_y)
 
-        if gr_score > max_score_grad:
-            best_class_gr = gr_class
-            max_score_grad = gr_score
+        if curr_score > max_score:
+            best_tree = curr_tree
+            max_score = curr_score
 
         j += 1
-        i += gr_score
+        i += curr_score
 
     mean_score = i / n_folds
 
-    return best_class_gr, mean_score
+    return best_tree, mean_score
 
 
 def print_regressor_scores(true_y, pred_y):
     mse = mean_squared_error(true_y, pred_y)
     mae = mean_absolute_error(true_y, pred_y)
     max = max_error(true_y, pred_y)
-    print("Mean Squared Error:\t" + str(mse))
+    print("Mean Squared Error:\t\t" + str(mse))
     print("Mean Absolute Error:\t" + str(mae))
-    print("Max Error:\t\t" + str(max))
+    print("Max Error:\t\t\t\t" + str(max))
 
 
 def print_classifier_scores(true_y, pred_y, beta=1.0):
@@ -128,7 +104,7 @@ def main():
     training_data = training_data.sample(frac=1)
     training_data = pd.get_dummies(training_data)
     training_data_arr = training_data.to_numpy()
-    folded_classifier, score = kfold(training_data_arr, n_folds, 1, training_data_arr.shape[1], 0)
+    best_classifier, score = k_fold(training_data_arr, n_folds, 1, training_data_arr.shape[1], 0)
     print("\n----MEAN SCORE----")
     print(str(n_folds) + "-folds classifier mean score: " + str(score))
 
@@ -140,9 +116,10 @@ def main():
     training_data_canceled = training_data_canceled.drop(to_drop, axis=0)
     training_data_canceled = training_data_canceled.drop("IsCanceled", axis=1)
     training_data_canceled_arr = training_data_canceled.to_numpy()
-    best_canc_minus_arrival_regressor, reg_score = kfold(training_data_canceled_arr,
+
+    best_regressor, reg_score = k_fold(training_data_canceled_arr,
                                                          n_folds,
-                                                         0, -2,
+                                                         0, -1,
                                                          training_data_canceled_arr.shape[1] - 1,
                                                          is_regressor=True)
 
@@ -151,7 +128,7 @@ def main():
 
     target_names_classification = training_data["IsCanceled"].unique().tolist()
 
-    first_dot = tree.export_graphviz(folded_classifier.estimators_[42, 0],
+    first_dot = tree.export_graphviz(best_classifier.estimators_[42, 0],
                 feature_names=training_data.columns.tolist()[1:],
                 class_names=target_names_classification,
                 filled=True,
@@ -160,12 +137,21 @@ def main():
 
     target_names_regression = training_data_canceled["CancellationMinusArrival"].unique().tolist()
 
-    second_dot = tree.export_graphviz(best_canc_minus_arrival_regressor,#.estimators_[42, 0],
-                feature_names=training_data_canceled.columns.tolist()[:-2],
+    second_dot = tree.export_graphviz(best_regressor,
+                feature_names=training_data_canceled.columns.tolist()[:-1],
                 class_names=target_names_regression,
                 filled=True,
                 rounded=True,
-                out_file="..\\res\\" + path.basename(argv[1]).replace(".csv", "") + "_days_regressor_42.dot")
+                out_file="..\\res\\" + path.basename(argv[1]).replace(".csv", "") + "_notice_days_regressor.dot")
+
+    # Serializzazione dei modelli
+    classifier_path = "..\\models\\" + path.basename(argv[1].replace(".csv", "_classifier.tree"))
+    with open(classifier_path, "wb") as out_classifier:
+        pickle.dump(best_classifier, out_classifier)
+
+    regressor_path = "..\\models\\" + path.basename(argv[1].replace(".csv", "_regressor.tree"))
+    with open(regressor_path, "wb") as out_regressor:
+        pickle.dump(best_regressor,  out_regressor)
 
 
 main()
