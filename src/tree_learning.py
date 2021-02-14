@@ -3,6 +3,7 @@ from pydotplus import graph_from_dot_data
 from IPython.display import Image, display
 from sklearn.experimental import enable_hist_gradient_boosting  # noqa
 from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor, HistGradientBoostingRegressor
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.metrics import precision_recall_fscore_support, mean_absolute_error,\
     mean_squared_error, accuracy_score, max_error
@@ -40,7 +41,7 @@ def kfold(training_data_arr, n_folds, x_start, x_end, y_index, is_regressor=Fals
     max_score_grad = 0
     gr_score = 0
     if is_regressor:
-        gr_class = HistGradientBoostingRegressor()
+        gr_class = DecisionTreeRegressor(max_depth=5)
     else:
         gr_class = GradientBoostingClassifier()
 
