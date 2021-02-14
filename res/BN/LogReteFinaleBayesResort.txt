@@ -1,0 +1,79 @@
+=== Run information ===
+
+Scheme:       weka.classifiers.bayes.BayesNet -D -Q weka.classifiers.bayes.net.search.local.HillClimber -- -N -P 3 -S AIC -E weka.classifiers.bayes.net.estimate.SimpleEstimator -- -A 0.5
+Relation:     processed4clustering (1)-weka.filters.unsupervised.attribute.NumericToNominal-Rfirst-last-weka.filters.unsupervised.attribute.RenameNominalValues-RIsCanceled, IsRepeatedGuest, WasInWaitingList-N0:False, 1:True
+Instances:    40060
+Attributes:   16
+              IsCanceled
+              Meal
+              DistributionChannel
+              IsRepeatedGuest
+              DepositType
+              CustomerType
+              TotalOfSpecialRequests
+              WasInWaitingList
+              Season
+              ADR
+              LeadTime
+              BookingChanges
+              Adults
+              CancelRate
+              Minors
+              Staying
+Test mode:    10-fold cross-validation
+
+=== Classifier model (full training set) ===
+
+Bayes Network Classifier
+not using ADTree
+#attributes=16 #classindex=0
+Network structure (nodes followed by parents)
+IsCanceled(2): DepositType TotalOfSpecialRequests 
+Meal(5): LeadTime DepositType DistributionChannel 
+DistributionChannel(4): TotalOfSpecialRequests IsCanceled DepositType 
+IsRepeatedGuest(2): LeadTime DistributionChannel IsCanceled 
+DepositType(3): TotalOfSpecialRequests 
+CustomerType(4): LeadTime DistributionChannel Meal 
+TotalOfSpecialRequests(6): 
+WasInWaitingList(2): CustomerType Meal Staying 
+Season(4): Staying LeadTime CustomerType 
+ADR(3): Season DistributionChannel CustomerType 
+LeadTime(6): DistributionChannel IsCanceled DepositType 
+BookingChanges(3): Meal CustomerType 
+Adults(2): DistributionChannel ADR LeadTime 
+CancelRate(2): IsCanceled LeadTime Season 
+Minors(2): ADR DistributionChannel 
+Staying(4): LeadTime IsCanceled CustomerType 
+LogScore Bayes: -336583.553766418
+LogScore BDeu: -345733.1730132982
+LogScore MDL: -345738.5806941858
+LogScore ENTROPY: -336353.9333832216
+LogScore AIC: -338124.9333832216
+
+
+Time taken to build model: 1.05 seconds
+
+=== Stratified cross-validation ===
+=== Summary ===
+
+Correctly Classified Instances       32243               80.4868 %
+Incorrectly Classified Instances      7817               19.5132 %
+Kappa statistic                          0.411 
+Mean absolute error                      0.292 
+Root mean squared error                  0.3832
+Relative absolute error                 72.8017 %
+Root relative squared error             85.5711 %
+Total Number of Instances            40060     
+
+=== Detailed Accuracy By Class ===
+
+                 TP Rate  FP Rate  Precision  Recall   F-Measure  MCC      ROC Area  PRC Area  Class
+                 0,974    0,634    0,800      0,974    0,878      0,467    0,772     0,881     False
+                 0,366    0,026    0,842      0,366    0,510      0,467    0,772     0,666     True
+Weighted Avg.    0,805    0,465    0,811      0,805    0,776      0,467    0,772     0,821     
+
+=== Confusion Matrix ===
+
+     a     b   <-- classified as
+ 28174   764 |     a = False
+  7053  4069 |     b = True
