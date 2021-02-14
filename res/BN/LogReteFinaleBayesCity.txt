@@ -1,0 +1,79 @@
+=== Run information ===
+
+Scheme:       weka.classifiers.bayes.BayesNet -D -Q weka.classifiers.bayes.net.search.local.HillClimber -- -N -P 3 -S AIC -E weka.classifiers.bayes.net.estimate.SimpleEstimator -- -A 0.5
+Relation:     processed4clusteringCity-weka.filters.unsupervised.attribute.NumericToNominal-Rfirst-last-weka.filters.unsupervised.attribute.RenameNominalValues-RIsCanceled, IsRepeatedGuest, WasInWaitingList-N0:False, 1:True
+Instances:    79330
+Attributes:   16
+              IsCanceled
+              Meal
+              DistributionChannel
+              IsRepeatedGuest
+              DepositType
+              CustomerType
+              TotalOfSpecialRequests
+              WasInWaitingList
+              Season
+              ADR
+              LeadTime
+              BookingChanges
+              Adults
+              CancelRate
+              Minors
+              Staying
+Test mode:    10-fold cross-validation
+
+=== Classifier model (full training set) ===
+
+Bayes Network Classifier
+not using ADTree
+#attributes=16 #classindex=0
+Network structure (nodes followed by parents)
+IsCanceled(2): DepositType Staying IsRepeatedGuest 
+Meal(4): CustomerType DepositType DistributionChannel 
+DistributionChannel(5): IsRepeatedGuest IsCanceled Staying 
+IsRepeatedGuest(2): 
+DepositType(3): Staying IsRepeatedGuest 
+CustomerType(4): LeadTime DepositType TotalOfSpecialRequests 
+TotalOfSpecialRequests(6): DepositType IsCanceled Adults 
+WasInWaitingList(2): DepositType CustomerType LeadTime 
+Season(4): ADR LeadTime CustomerType 
+ADR(3): CustomerType CancelRate LeadTime 
+LeadTime(6): DistributionChannel IsCanceled Staying 
+BookingChanges(3): Staying IsCanceled 
+Adults(2): DistributionChannel LeadTime IsCanceled 
+CancelRate(2): IsCanceled CustomerType DepositType 
+Minors(2): ADR DistributionChannel 
+Staying(4): IsRepeatedGuest 
+LogScore Bayes: -658856.6199134064
+LogScore BDeu: -665719.502181705
+LogScore MDL: -666389.4925804441
+LogScore ENTROPY: -658639.1902594386
+LogScore AIC: -660013.1902594386
+
+
+Time taken to build model: 2.23 seconds
+
+=== Stratified cross-validation ===
+=== Summary ===
+
+Correctly Classified Instances       63313               79.8097 %
+Incorrectly Classified Instances     16017               20.1903 %
+Kappa statistic                          0.5668
+Mean absolute error                      0.2828
+Root mean squared error                  0.3774
+Relative absolute error                 58.1548 %
+Root relative squared error             76.5369 %
+Total Number of Instances            79330     
+
+=== Detailed Accuracy By Class ===
+
+                 TP Rate  FP Rate  Precision  Recall   F-Measure  MCC      ROC Area  PRC Area  Class
+                 0,932    0,388    0,770      0,932    0,843      0,587    0,848     0,853     False
+                 0,612    0,068    0,865      0,612    0,717      0,587    0,848     0,852     True
+Weighted Avg.    0,798    0,255    0,810      0,798    0,790      0,587    0,848     0,852     
+
+=== Confusion Matrix ===
+
+     a     b   <-- classified as
+ 43071  3157 |     a = False
+ 12860 20242 |     b = True
