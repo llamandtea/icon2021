@@ -1,0 +1,129 @@
+tree_learning.py /home/llamandtea/Documenti/progetti_uni/icon2021/datasets/processed_city_hotel.csv 10
+Fold 1/10
+--------MODEL 1 QUALITY--------
+Accuracy:	0.8204966595235094
+Precision:	0.8399508901997879
+Recall:		0.7956030574111991
+F-measure:	0.7967075160851071
+(beta 2.0)
+Fold 2/10
+--------MODEL 2 QUALITY--------
+Accuracy:	0.8249086096054457
+Precision:	0.845998772878952
+Recall:		0.8019946327280009
+F-measure:	0.8028401451200979
+(beta 2.0)
+Fold 3/10
+--------MODEL 3 QUALITY--------
+Accuracy:	0.8308332282869028
+Precision:	0.8493543179983858
+Recall:		0.8083997983356157
+F-measure:	0.8096911017525694
+(beta 2.0)
+Fold 4/10
+--------MODEL 4 QUALITY--------
+Accuracy:	0.8278078910878608
+Precision:	0.8466912747991441
+Recall:		0.8034222342730347
+F-measure:	0.8048223549262452
+(beta 2.0)
+Fold 5/10
+--------MODEL 5 QUALITY--------
+Accuracy:	0.8251607210386991
+Precision:	0.844850178077466
+Recall:		0.7989568385937227
+F-measure:	0.8003979325803907
+(beta 2.0)
+Fold 6/10
+--------MODEL 6 QUALITY--------
+Accuracy:	0.8270515567881004
+Precision:	0.8491327171060139
+Recall:		0.8034155522944381
+F-measure:	0.8043405871269493
+(beta 2.0)
+Fold 7/10
+--------MODEL 7 QUALITY--------
+Accuracy:	0.8222614395562838
+Precision:	0.8437700398660974
+Recall:		0.8006671631964821
+F-measure:	0.8011680941118893
+(beta 2.0)
+Fold 8/10
+--------MODEL 8 QUALITY--------
+Accuracy:	0.8269255010714736
+Precision:	0.8519046931032611
+Recall:		0.8010094233333267
+F-measure:	0.8019298604689613
+(beta 2.0)
+Fold 9/10
+--------MODEL 9 QUALITY--------
+Accuracy:	0.8215051052565234
+Precision:	0.8426743920912603
+Recall:		0.7973051134818951
+F-measure:	0.7981740282069298
+(beta 2.0)
+Fold 10/10
+--------MODEL 10 QUALITY--------
+Accuracy:	0.8255388881885793
+Precision:	0.8434306718019778
+Recall:		0.8007129072378667
+F-measure:	0.8021783438043364
+(beta 2.0)
+
+----MEAN SCORE----
+10-folds classifier mean score: 0.8252489600403378
+Fold 1/10
+--------MODEL 1 QUALITY--------
+Mean Squared Error:		3932.405402460288
+Mean Absolute Error:	45.18928858825261
+Max Error:				280.9990118577075
+Fold 2/10
+--------MODEL 2 QUALITY--------
+Mean Squared Error:		4105.922847429316
+Mean Absolute Error:	46.63505366577389
+Max Error:				296.22340425531917
+Fold 3/10
+--------MODEL 3 QUALITY--------
+Mean Squared Error:		3998.4067848283967
+Mean Absolute Error:	46.15417063133167
+Max Error:				288.2497735507246
+Fold 4/10
+--------MODEL 4 QUALITY--------
+Mean Squared Error:		4325.589145393088
+Mean Absolute Error:	47.62020651252454
+Max Error:				287.953531598513
+Fold 5/10
+--------MODEL 5 QUALITY--------
+Mean Squared Error:		4272.377573880243
+Mean Absolute Error:	48.13562927829027
+Max Error:				309.9906695938529
+Fold 6/10
+--------MODEL 6 QUALITY--------
+Mean Squared Error:		3805.0559004439947
+Mean Absolute Error:	45.51291023331518
+Max Error:				271.8738170347003
+Fold 7/10
+--------MODEL 7 QUALITY--------
+Mean Squared Error:		4091.3548416099625
+Mean Absolute Error:	46.996793038702116
+Max Error:				291.28524107471475
+Fold 8/10
+--------MODEL 8 QUALITY--------
+Mean Squared Error:		3894.722188815058
+Mean Absolute Error:	46.25345968424595
+Max Error:				342.9883474576271
+Fold 9/10
+--------MODEL 9 QUALITY--------
+Mean Squared Error:		4176.000200062189
+Mean Absolute Error:	47.87504274930695
+Max Error:				335.29787234042556
+Fold 10/10
+--------MODEL 10 QUALITY--------
+Mean Squared Error:		4395.764753171535
+Mean Absolute Error:	47.69515947469322
+Max Error:				358.0
+
+----MEAN SCORE----
+10-folds regressor mean score: 0.5365151178564822
+
+Process finished with exit code 0
