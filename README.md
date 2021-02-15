@@ -1,5 +1,5 @@
 # icon2021
-Repository per il progetto di Ingegneria del Software 2020/2021 (Informatica, Bari)
+Repository per il progetto di Ingegneria della Conoscenza 2020/2021 (Informatica, Bari)
 
 ### Impostare il progetto
 
