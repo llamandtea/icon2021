@@ -19,7 +19,7 @@ python -m venv icon2021
 (linux o git bash su win)
 source /src/icon2021/bin/activate
 ```
-NB: non so per rquale oscuro motivo `activate.bat` non funziona con la console di win10, consiglio di installare i pacchetti da git bash
+NB: non so per quale oscuro motivo `activate.bat` non funziona con la console di win10, consiglio di installare i pacchetti da git bash
 
 
 - Installare le dipendenze
