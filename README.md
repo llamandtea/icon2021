@@ -44,6 +44,6 @@ tree_learning.py ./datasets/tree_city_hotel.csv [numero_folds]
 ### Appprendimento dei cluster
 
 ```
-clustering.py ./datasets/network_cluster_city_hotel.csv [numero_iterazioni] [numero_fold]
-clustering.py ./datasets/network_cluster_resort_hotel.csv [numero_iterazioni] [numero_fold]
+clustering.py ./datasets/network_cluster_city_hotel.csv [numero_iterazioni] [numero_cluster]
+clustering.py ./datasets/network_cluster_resort_hotel.csv [numero_iterazioni] [numero_cluster]
 ```
